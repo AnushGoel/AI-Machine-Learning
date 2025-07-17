@@ -1,9 +1,8 @@
 streamlit
 pandas
 numpy
+scikit-learn==1.1.3
 matplotlib
 seaborn
-scikit-learn
 plotly
-pycaret
-lazypredict
+lazypredict==0.2.12
