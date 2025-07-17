@@ -1,9 +1,9 @@
 streamlit
 pandas
 numpy
-scikit-learn
 matplotlib
 seaborn
+scikit-learn
 plotly
-lazy_predict
-openpyxl
+pycaret
+lazypredict
