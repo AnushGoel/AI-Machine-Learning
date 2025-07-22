@@ -1,39 +1,57 @@
-# app.py
-
 import streamlit as st
 import pandas as pd
+
 from utils.eda import run_eda
-from utils.graphing import run_graphs
-from utils.preprocessing import preprocess_data
-from utils.modeling import run_model
+from utils.modeling import run_modeling
+from utils.graphing import plot_histograms, plot_boxplots, plot_pairplot
+from utils.preprocessing import auto_preprocess
 
-st.set_page_config(page_title="AutoML Explorer", layout="wide")
+st.set_page_config(page_title="AutoML Dashboard", layout="wide")
 
-st.title("📊 AutoML & EDA Dashboard")
+st.title("🤖 AutoML System with EDA, Modeling & Visualization")
 
-# Step 1: Upload
-file = st.file_uploader("Upload your dataset (CSV)", type=["csv"])
-if file:
-    df = pd.read_csv(file)
-    st.success("File uploaded successfully!")
-    st.dataframe(df.head())
+# --- File Upload ---
+st.sidebar.header("📁 Upload Your Dataset")
+uploaded_file = st.sidebar.file_uploader("Upload a CSV file", type=["csv"])
 
-    # Step 2: Select Target
-    target = st.selectbox("Select the target column (Y variable)", df.columns)
+if uploaded_file is not None:
+    try:
+        df = pd.read_csv(uploaded_file)
+        st.sidebar.success("✅ File uploaded successfully")
 
-    if target:
-        # Step 3: Run EDA
-        st.subheader("🔍 Exploratory Data Analysis")
-        run_eda(df, target)
+        # Target column
+        target = st.sidebar.selectbox("🎯 Select Target Variable", df.columns)
 
-        # Step 4: Graphs
-        st.subheader("📈 Visual Analysis")
-        run_graphs(df, target)
+        # Auto preprocessing
+        df = auto_preprocess(df)
 
-        # Step 5: Preprocess
-        st.subheader("⚙️ Data Preprocessing")
-        X_train, X_test, y_train, y_test, task_type = preprocess_data(df, target)
+        # --- Tabs for App Sections ---
+        tabs = st.tabs(["📊 EDA", "📈 Graphs", "⚙️ Modeling"])
 
-        # Step 6: Modeling
-        st.subheader("🤖 ML Modeling & Evaluation")
-        run_model(X_train, X_test, y_train, y_test, task_type)
+        # --- EDA Tab ---
+        with tabs[0]:
+            try:
+                run_eda(df, target)
+            except Exception as e:
+                st.error(f"❌ EDA Error: {e}")
+
+        # --- Graphs Tab ---
+        with tabs[1]:
+            try:
+                plot_histograms(df)
+                plot_boxplots(df)
+                plot_pairplot(df, target)
+            except Exception as e:
+                st.error(f"❌ Graphing Error: {e}")
+
+        # --- Modeling Tab ---
+        with tabs[2]:
+            try:
+                run_modeling(df, target)
+            except Exception as e:
+                st.error(f"❌ Modeling Error: {e}")
+
+    except Exception as e:
+        st.error(f"❌ Failed to read file: {e}")
+else:
+    st.warning("📤 Please upload a CSV file to begin.")
