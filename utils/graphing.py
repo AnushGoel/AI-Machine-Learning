@@ -1,44 +1,34 @@
-# utils/graphing.py
-
-import streamlit as st
-import seaborn as sns
-import matplotlib.pyplot as plt
 import pandas as pd
-import plotly.express as px
+import numpy as np
+import streamlit as st
 
-def run_graphs(df: pd.DataFrame, target: str):
-    numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
-    categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
+def auto_preprocess(df: pd.DataFrame):
+    st.markdown("## 🧹 Auto Data Preprocessing")
 
-    st.markdown("### 📊 Univariate Plots")
+    try:
+        # Drop constant columns
+        constant_cols = [col for col in df.columns if df[col].nunique() <= 1]
+        if constant_cols:
+            df.drop(columns=constant_cols, inplace=True)
+            st.warning(f"Removed constant columns: {constant_cols}")
 
-    # Numeric - Histogram
-    st.write("**Histogram (Numeric Columns)**")
-    for col in numeric_cols:
-        fig = px.histogram(df, x=col)
-        st.plotly_chart(fig, use_container_width=True)
+        # Remove duplicates
+        before = df.shape[0]
+        df.drop_duplicates(inplace=True)
+        after = df.shape[0]
+        if before != after:
+            st.info(f"Removed {before - after} duplicate rows")
 
-    # Categorical - Bar Plot
-    st.write("**Bar Plots (Categorical Columns)**")
-    for col in categorical_cols:
-        fig = px.bar(df[col].value_counts().reset_index(), x="index", y=col, labels={"index": col, col: "Count"})
-        st.plotly_chart(fig, use_container_width=True)
+        # Fill missing values
+        for col in df.columns:
+            if df[col].isnull().sum() > 0:
+                if df[col].dtype in ["int64", "float64"]:
+                    df[col].fillna(df[col].median(), inplace=True)
+                else:
+                    df[col].fillna(df[col].mode()[0], inplace=True)
 
-    st.markdown("### 📈 Bivariate Plots")
+        return df
 
-    # Numeric vs Target
-    if target in numeric_cols:
-        for col in numeric_cols:
-            if col != target:
-                fig = px.scatter(df, x=col, y=target)
-                st.plotly_chart(fig, use_container_width=True)
-    else:
-        for col in numeric_cols:
-            fig = px.box(df, x=target, y=col)
-            st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("### 🔥 Correlation Heatmap (Numeric Only)")
-    if len(numeric_cols) >= 2:
-        fig, ax = plt.subplots()
-        sns.heatmap(df[numeric_cols].corr(), annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
-        st.pyplot(fig)
+    except Exception as e:
+        st.error(f"❌ Preprocessing failed: {e}")
+        return df
