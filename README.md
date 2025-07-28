@@ -56,11 +56,6 @@ streamlit run app.py
     └── preprocessing.py
 ```
 
-## 🔮 Screenshots
-
-| Upload Dataset | EDA | Model Training | Prediction |
-|----------------|-----|----------------|------------|
-| ![upload](https://via.placeholder.com/200x120.png?text=Upload) | ![eda](https://via.placeholder.com/200x120.png?text=EDA) | ![model](https://via.placeholder.com/200x120.png?text=Training) | ![predict](https://via.placeholder.com/200x120.png?text=Predict) |
 
 ## 🧪 Sample Usage
 
